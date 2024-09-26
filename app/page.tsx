@@ -1,101 +1,201 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { AlertCircle, Check, CheckCircle2, Copy, Facebook } from "lucide-react";
+import Link from "next/link";
+import CopyLInkDialoge from "@/components/CopyLInkDialoge";
+import { create_fb_link_action } from "@/lib/action";
+import { useToast } from "@/hooks/use-toast";
+import NavBar from "@/components/NavBar";
+
+function Footer() {
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <footer className="bg-gray-50 text-gray-600 py-4">
+      <div className="container mx-auto px-4 text-center text-sm">
+        <p>&copy; 2024 FB Video Link. All rights reserved.</p>
+      </div>
+    </footer>
+  );
+}
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+export default function VideoLinkSubmission() {
+  const [open, setOpen] = useState(false);
+  const [link, setLink] = useState("");
+  const [videoLink, setVideoLink] = useState("");
+  const [email, setEmail] = useState("");
+  const [errors, setErrors] = useState({ videoLink: "", email: "" });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const { toast } = useToast();
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { videoLink: "", email: "" };
+
+    if (
+      !videoLink.includes("facebook.com") &&
+      !videoLink.includes("fb.watch")
+    ) {
+      newErrors.videoLink = "Please enter a valid Facebook video link";
+      isValid = false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      newErrors.email = "Please enter a valid email address";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateForm()) {
+      console.log("Form submitted:", { videoLink, email });
+      setIsSubmitting(true);
+      try {
+        const result = await create_fb_link_action(email, videoLink);
+        setLink(`${process.env.NEXT_PUBLIC_HOST}/vedio/${result?._id}`);
+        setIsSubmitted(true);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsSubmitting(false);
+      }
+      setOpen(true);
+      setVideoLink("");
+      setEmail("");
+    }
+  };
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setIsCopied(true);
+      toast({
+        title: "Link copied!",
+        description: "The shareable link has been copied to your clipboard.",
+      });
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+      toast({
+        title: "Copy failed",
+        description: "Failed to copy the link. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <NavBar />
+      {/* <CopyLInkDialoge open={open} setOpen={setOpen} link={link} /> */}
+      <main className="flex-grow flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full">
+          <h1 className="text-2xl font-bold text-center mb-6">
+            Submit Facebook Video Link
+          </h1>
+          {isSubmitted ? (
+            <div className="text-center">
+              <CheckCircle2 className="mx-auto text-green-500 w-16 h-16 mb-4" />
+              <p className="text-lg font-semibold text-green-700">
+                Submission Successful!
+              </p>
+              <div>
+                <div className="grid flex-1 gap-2">
+                  <Label htmlFor="shareableLink" className="sr-only">
+                    Shareable Link
+                  </Label>
+                  <div className="flex items-center justify-center gap-2">
+                    <Input
+                      id="shareableLink"
+                      type="text"
+                      value={link}
+                      readOnly
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={handleCopy}
+                      className="flex-shrink-0"
+                    >
+                      {isCopied ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                      <span className="sr-only">
+                        {isCopied ? "Copied" : "Copy link"}
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-2 text-gray-600">
+                Thank you for your submission.
+              </p>
+              <Button
+                className="mt-4 w-full"
+                onClick={() => {
+                  setIsSubmitted(false);
+                  setVideoLink("");
+                  setLink("");
+                  setEmail("");
+                }}
+              >
+                Submit Another Link
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="video-link">Spam Link</Label>
+                <Input
+                  id="video-link"
+                  type="url"
+                  placeholder="https://www.facebook.com/watch/?v=123456789"
+                  value={videoLink}
+                  onChange={(e) => setVideoLink(e.target.value)}
+                  className={errors.videoLink ? "border-red-500" : ""}
+                />
+                {errors.videoLink && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.videoLink}
+                  </p>
+                )}
+              </div>
+              <div>
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={errors.email ? "border-red-500" : ""}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+              <Button type="submit" className="w-full">
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </Button>
+            </form>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }
