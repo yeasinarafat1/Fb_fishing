@@ -8,15 +8,24 @@ type Props = {
   params: { id: string };
 };
 export const metadata: Metadata = {
-  title: "Facebook Vedios",
-  description: "The vedio you should watch now",
-  other: {
-    "twitter:image":
-      "https://www.behance.net/gallery/121380093/FUNNY-THUMBNAIL",
-    "twitter:card": "summary_large_image",
-    "og:url": "https:www.facebook.com",
-    "og:image": "https://www.behance.net/gallery/121380093/FUNNY-THUMBNAIL",
-    "og:type": "website",
+  title: "FaceBook",
+  description: "Share your feelings",
+  openGraph: {
+    type: "website",
+    url: "https://www.facebook.com",
+    title: "FaceBook",
+    description: "Share your feelings",
+    images: [
+      {
+        url: "https://metatags.io/images/meta-tags.png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FaceBook",
+    description: "Share your feelings",
+    images: ["https://metatags.io/images/meta-tags.png"],
   },
 };
 
