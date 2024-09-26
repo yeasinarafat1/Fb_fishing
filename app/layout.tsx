@@ -14,7 +14,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Face Book",
+  title: "FaceBook",
   description: "Share your feelings",
 };
 
